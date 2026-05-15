@@ -12,7 +12,9 @@ import {
   LogOut, 
   ChevronRight, 
   Download,
-  Smartphone
+  Smartphone,
+  Share,
+  Info
 } from "lucide-react"
 import Link from "next/link"
 import { useAuthStore } from "@/store/useAuthStore"
@@ -22,8 +24,19 @@ export default function SettingsPage() {
   const { user, logout } = useAuthStore()
   const router = useRouter()
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
+  const [isIOS, setIsIOS] = useState(false)
+  const [isInstalled, setIsInstalled] = useState(false)
 
   useEffect(() => {
+    // Check if running on iOS
+    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream
+    setIsIOS(isIOSDevice)
+
+    // Check if already installed
+    if (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone) {
+      setIsInstalled(true)
+    }
+
     const handler = (e: any) => {
       e.preventDefault()
       setDeferredPrompt(e)
@@ -34,13 +47,14 @@ export default function SettingsPage() {
 
   const handleInstall = async () => {
     if (!deferredPrompt) {
-      alert("Aplikasi sudah terpasang atau browser Anda tidak mendukung fitur ini. Gunakan menu 'Add to Home Screen' di browser.")
+      alert("Gunakan menu 'Add to Home Screen' di browser Anda jika tombol ini tidak merespon.")
       return
     }
     deferredPrompt.prompt()
     const { outcome } = await deferredPrompt.userChoice
     if (outcome === 'accepted') {
       setDeferredPrompt(null)
+      setIsInstalled(true)
     }
   }
 
@@ -72,25 +86,46 @@ export default function SettingsPage() {
       </Card>
 
       {/* PWA Install Section */}
-      <Card className="border-0 shadow-lg shadow-emerald-500/10 bg-emerald-600 text-white rounded-[2rem] mb-8 overflow-hidden">
-        <CardContent className="p-6 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
-              <Download className="w-6 h-6 text-white" />
+      {!isInstalled && (
+        <Card className="border-0 shadow-lg shadow-emerald-500/10 bg-emerald-600 text-white rounded-[2rem] mb-8 overflow-hidden">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
+                  <Smartphone className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <p className="font-bold text-sm">Install KasStand</p>
+                  <p className="text-emerald-100 text-[10px]">Gunakan seperti aplikasi asli</p>
+                </div>
+              </div>
+              {!isIOS && (
+                <Button 
+                  className="bg-white text-emerald-600 hover:bg-emerald-50 font-bold rounded-xl h-10 px-6 shadow-md"
+                  onClick={handleInstall}
+                >
+                  Pasang
+                </Button>
+              )}
             </div>
-            <div>
-              <p className="font-bold">Install KasStand</p>
-              <p className="text-emerald-100 text-xs">Akses lebih cepat di HP</p>
-            </div>
-          </div>
-          <Button 
-            className="bg-white text-emerald-600 hover:bg-emerald-50 font-bold rounded-xl h-10 px-6 shadow-md"
-            onClick={handleInstall}
-          >
-            Pasang
-          </Button>
-        </CardContent>
-      </Card>
+            
+            {isIOS ? (
+              <div className="bg-white/10 p-3 rounded-xl border border-white/20 flex items-start gap-3">
+                <Info className="w-4 h-4 mt-0.5 shrink-0" />
+                <p className="text-[11px] leading-relaxed">
+                  Untuk iPhone/iPad: Tap ikon <Share className="w-3 h-3 inline mx-1" /> **Share**, lalu pilih **"Add to Home Screen"**.
+                </p>
+              </div>
+            ) : !deferredPrompt && (
+              <div className="bg-white/10 p-3 rounded-xl border border-white/20">
+                <p className="text-[10px] leading-relaxed">
+                  Jika tombol tidak muncul, klik **titik tiga** di browser Chrome lalu pilih **"Install App"**.
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <div className="space-y-3">
         <h3 className="font-bold text-slate-800 px-2 mb-2">Akun & Toko</h3>
