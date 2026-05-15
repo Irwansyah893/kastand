@@ -104,3 +104,17 @@
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+@media print {
+  .no-print, nav, button, .floating-button {
+    display: none !important;
+  }
+  body {
+    background: white;
+    padding: 0;
+  }
+  .print-only {
+    display: block !important;
+  }
+}
+

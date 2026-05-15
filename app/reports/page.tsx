@@ -61,7 +61,11 @@ export default function ReportsPage() {
 
       <div className="flex items-center justify-between mb-6">
         <h3 className="font-bold text-slate-800 text-lg">Detail Penjualan</h3>
-        <Button variant="ghost" className="text-emerald-600 font-bold text-xs gap-2">
+        <Button 
+          variant="ghost" 
+          className="text-emerald-600 font-bold text-xs gap-2"
+          onClick={() => window.print()}
+        >
           <FileText className="w-4 h-4" />
           Ekspor PDF
         </Button>
