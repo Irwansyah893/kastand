@@ -6,16 +6,22 @@ export async function registerUserAction(formData: any) {
   const { name, storeName, email, password } = formData
 
   try {
-    // Check if email already exists
+    // 1. Validasi Input Dasar
+    if (!name || !storeName || !email || !password) {
+      return { success: false, message: "Semua data wajib diisi!" }
+    }
+
+    // 2. Cek apakah email sudah ada
     const existingUser = await prisma.user.findUnique({
       where: { email }
     })
 
     if (existingUser) {
-      return { success: false, message: "Email sudah terdaftar!" }
+      return { success: false, message: "Email sudah terdaftar! Silakan login." }
     }
 
-    // Create user and store
+    // 3. Simpan ke Database
+    // Kita buat User dan Store sekaligus dalam satu transaksi
     const user = await prisma.user.create({
       data: {
         full_name: name,
@@ -29,10 +35,26 @@ export async function registerUserAction(formData: any) {
       }
     })
 
-    return { success: true, user }
-  } catch (error) {
-    console.error("Register Error:", error)
-    return { success: false, message: "Gagal mendaftar. Coba lagi." }
+    return { 
+      success: true, 
+      user: {
+        id: user.id,
+        email: user.email,
+        full_name: user.full_name
+      } 
+    }
+  } catch (error: any) {
+    console.error("DEBUG REGISTER ERROR:", error)
+    
+    // Memberikan pesan error yang lebih spesifik jika memungkinkan
+    if (error.code === 'P2002') {
+      return { success: false, message: "Email sudah digunakan." }
+    }
+    
+    return { 
+      success: false, 
+      message: `Gagal Daftar: ${error.message || "Kesalahan Server"}` 
+    }
   }
 }
 
@@ -48,7 +70,7 @@ export async function loginUserAction(email: string) {
     }
 
     return { success: true, user }
-  } catch (error) {
-    return { success: false, message: "Terjadi kesalahan." }
+  } catch (error: any) {
+    return { success: false, message: `Login Error: ${error.message}` }
   }
 }
