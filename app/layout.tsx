@@ -21,6 +21,7 @@ export default function RootLayout({
   return (
     <html lang="id">
       <body className={`${inter.className} bg-slate-50 text-slate-900 antialiased max-w-md mx-auto min-h-screen relative shadow-2xl pb-20`}>
+        <PWAHandler />
         {children}
         <BottomNav />
       </body>

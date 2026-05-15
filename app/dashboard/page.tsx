@@ -7,12 +7,16 @@ import { useAuthStore } from "@/store/useAuthStore"
 import { useTransactionStore } from "@/store/useTransactionStore"
 import { useExpenseStore } from "@/store/useExpenseStore"
 import { useProductStore } from "@/store/useProductStore"
+import { usePWAStore } from "@/store/usePWAStore"
+import { Smartphone, Download, X } from "lucide-react"
 
 export default function DashboardPage() {
   const user = useAuthStore(state => state.user)
   const { transactions } = useTransactionStore()
   const { expenses } = useExpenseStore()
   const { products } = useProductStore()
+  
+  const { deferredPrompt, isInstallable, setDeferredPrompt } = usePWAStore()
 
   // Calculate real stats
   const todayOmzet = transactions.reduce((acc, tx) => acc + tx.total, 0)
@@ -31,6 +35,41 @@ export default function DashboardPage() {
           <span className="text-xl">🏪</span>
         </div>
       </header>
+
+      {/* PWA Fast Response Banner */}
+      {isInstallable && (
+        <div className="mb-8 animate-in fade-in slide-in-from-top duration-700">
+          <Card className="border-0 bg-emerald-600 text-white rounded-3xl shadow-xl shadow-emerald-500/20 overflow-hidden relative">
+            <div className="absolute right-0 top-0 p-2">
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-white/50" onClick={() => usePWAStore.getState().setIsInstallable(false)}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            <CardContent className="p-5 flex items-center gap-4">
+              <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
+                <Download className="w-6 h-6" />
+              </div>
+              <div className="flex-1">
+                <p className="font-bold text-sm">Install KasStand</p>
+                <p className="text-[10px] text-emerald-100">Buka jualan lebih cepat & lancar</p>
+              </div>
+              <Button 
+                size="sm" 
+                className="bg-white text-emerald-600 hover:bg-emerald-50 font-bold rounded-xl"
+                onClick={async () => {
+                  if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') setDeferredPrompt(null);
+                  }
+                }}
+              >
+                Install
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       <div className="grid gap-4 mb-8">
         {/* Main Stats Card */}
