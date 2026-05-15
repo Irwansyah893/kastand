@@ -3,14 +3,29 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { TrendingUp, Wallet, Package, ArrowRight, AlertTriangle, Receipt, QrCode, Sparkles } from "lucide-react"
 import Link from "next/link"
+import { useAuthStore } from "@/store/useAuthStore"
+import { useTransactionStore } from "@/store/useTransactionStore"
+import { useExpenseStore } from "@/store/useExpenseStore"
+import { useProductStore } from "@/store/useProductStore"
 
 export default function DashboardPage() {
+  const user = useAuthStore(state => state.user)
+  const { transactions } = useTransactionStore()
+  const { expenses } = useExpenseStore()
+  const { products } = useProductStore()
+
+  // Calculate real stats
+  const todayOmzet = transactions.reduce((acc, tx) => acc + tx.total, 0)
+  const totalExpense = expenses.reduce((acc, ex) => acc + ex.amount, 0)
+  const profit = todayOmzet - totalExpense
+  const lowStockCount = products.filter(p => (p.stock || 0) < 10).length
+
   return (
     <div className="flex flex-col min-h-screen p-6 pt-12 bg-slate-50 pb-32">
       <header className="mb-8 flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Halo, Juragan 👋</h1>
-          <p className="text-slate-500 text-sm">Stand Es Teh Manis</p>
+          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Halo, {user?.name?.split(' ')[0] || "Juragan"} 👋</h1>
+          <p className="text-slate-500 text-sm">{user?.storeName || "Toko Saya"}</p>
         </div>
         <div className="w-12 h-12 bg-white rounded-2xl shadow-sm border flex items-center justify-center">
           <span className="text-xl">🏪</span>
@@ -28,10 +43,9 @@ export default function DashboardPage() {
                 <Wallet className="w-5 h-5 text-white" />
               </div>
             </div>
-            <h2 className="text-4xl font-black mb-1">Rp 450.000</h2>
+            <h2 className="text-4xl font-black mb-1">Rp {todayOmzet.toLocaleString("id-ID")}</h2>
             <div className="flex items-center gap-2 text-xs text-emerald-100 mt-2">
-              <div className="px-2 py-0.5 bg-white/20 rounded-full font-bold">+15%</div>
-              <span>naik dari kemarin</span>
+              <span>Berdasarkan {transactions.length} transaksi</span>
             </div>
           </CardContent>
         </Card>
@@ -41,33 +55,37 @@ export default function DashboardPage() {
           <Card className="border-0 shadow-sm bg-white rounded-[2rem]">
             <CardContent className="p-5">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Untung Bersih</span>
-              <h3 className="text-xl font-extrabold text-slate-800">Rp 120.000</h3>
+              <h3 className={`text-xl font-extrabold ${profit >= 0 ? "text-slate-800" : "text-red-500"}`}>
+                Rp {profit.toLocaleString("id-ID")}
+              </h3>
             </CardContent>
           </Card>
           <Card className="border-0 shadow-sm bg-white rounded-[2rem]">
             <CardContent className="p-5">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Produk Laku</span>
-              <h3 className="text-xl font-extrabold text-slate-800">45 Cup</h3>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Pengeluaran</span>
+              <h3 className="text-xl font-extrabold text-orange-600">Rp {totalExpense.toLocaleString("id-ID")}</h3>
             </CardContent>
           </Card>
         </div>
       </div>
 
-      {/* Warning Card */}
-      <Card className="border-0 bg-orange-50 mb-8 rounded-3xl overflow-hidden shadow-sm shadow-orange-200">
-        <CardContent className="p-4 flex items-center gap-4">
-          <div className="w-10 h-10 bg-orange-200 rounded-2xl flex items-center justify-center shrink-0">
-            <AlertTriangle className="w-5 h-5 text-orange-700" />
-          </div>
-          <div>
-            <p className="text-sm font-bold text-orange-800">Stok Hampir Habis</p>
-            <p className="text-xs text-orange-600">Es Batu & Gula Pasir menipis</p>
-          </div>
-          <Link href="/products" className="ml-auto text-orange-700 bg-orange-200/50 p-2 rounded-xl">
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </CardContent>
-      </Card>
+      {/* Warning Card (Only if low stock) */}
+      {lowStockCount > 0 && (
+        <Card className="border-0 bg-orange-50 mb-8 rounded-3xl overflow-hidden shadow-sm shadow-orange-200">
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="w-10 h-10 bg-orange-200 rounded-2xl flex items-center justify-center shrink-0">
+              <AlertTriangle className="w-5 h-5 text-orange-700" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-orange-800">Stok Hampir Habis</p>
+              <p className="text-xs text-orange-600">{lowStockCount} produk perlu diisi kembali</p>
+            </div>
+            <Link href="/products" className="ml-auto text-orange-700 bg-orange-200/50 p-2 rounded-xl">
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Main Grid Menu */}
       <h3 className="font-bold text-slate-800 mb-4 px-1">Menu Utama</h3>

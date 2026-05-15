@@ -4,32 +4,29 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Store, Eye, EyeOff } from "lucide-react"
+import { Store, Eye, EyeOff, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
-
-const loginSchema = z.object({
-  email: z.string().email({ message: "Email tidak valid" }),
-  password: z.string().min(6, { message: "Password minimal 6 karakter" }),
-})
-
-type LoginFormValues = z.infer<typeof loginSchema>
+import { useAuthStore } from "@/store/useAuthStore"
 
 export default function LoginPage() {
   const router = useRouter()
-  
+  const login = useAuthStore(state => state.login)
   const [showPassword, setShowPassword] = useState(false)
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-  })
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
 
-  const onSubmit = (data: LoginFormValues) => {
-    console.log("Login data:", data)
-    // Mock login for now, would use Supabase auth
-    router.push("/dashboard")
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault()
+    setError("")
+    
+    const success = login(email, password)
+    if (success) {
+      router.push("/dashboard")
+    } else {
+      setError("Email atau Password salah!")
+    }
   }
 
   return (
@@ -40,37 +37,52 @@ export default function LoginPage() {
         </div>
         
         <h1 className="text-3xl font-bold text-slate-800 mb-2 tracking-tight">Masuk</h1>
-        <p className="text-slate-500 mb-8">Selamat datang kembali! Lanjutkan kelola usahamu.</p>
+        <p className="text-slate-500 mb-8 font-medium">Selamat datang kembali! Lanjutkan kelola usahamu.</p>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleLogin} className="space-y-6">
+          {error && (
+            <div className="bg-red-50 text-red-600 p-4 rounded-xl flex items-center gap-3 text-sm font-bold border border-red-100">
+              <AlertCircle className="w-5 h-5" />
+              {error}
+            </div>
+          )}
+
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-slate-600">Email</Label>
-            <Input id="email" type="email" placeholder="contoh@email.com" className="bg-slate-50 border-slate-200" {...register("email")} />
-            {errors.email && <p className="text-red-500 text-xs">{errors.email.message}</p>}
+            <Label htmlFor="email" className="text-slate-600 font-semibold">Email</Label>
+            <Input 
+              id="email" 
+              type="email" 
+              placeholder="contoh@email.com" 
+              className="h-14 rounded-2xl bg-slate-50 border-slate-200 focus:bg-white transition-all" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required 
+            />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-slate-600">Password</Label>
+            <Label htmlFor="password" className="text-slate-600 font-semibold">Password</Label>
             <div className="relative">
               <Input 
                 id="password" 
                 type={showPassword ? "text" : "password"} 
                 placeholder="••••••••" 
-                className="bg-slate-50 border-slate-200 pr-10" 
-                {...register("password")} 
+                className="h-14 rounded-2xl bg-slate-50 border-slate-200 focus:bg-white transition-all pr-12" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required 
               />
               <button 
                 type="button"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
                 onClick={() => setShowPassword(!showPassword)}
               >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
-            {errors.password && <p className="text-red-500 text-xs">{errors.password.message}</p>}
           </div>
 
-          <Button type="submit" className="w-full h-14 text-base font-semibold shadow-lg shadow-emerald-500/25">
+          <Button type="submit" className="w-full h-14 text-base font-semibold shadow-lg shadow-emerald-500/25 rounded-2xl">
             Masuk
           </Button>
         </form>

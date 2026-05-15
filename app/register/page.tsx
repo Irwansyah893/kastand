@@ -7,14 +7,21 @@ import { Label } from "@/components/ui/label"
 import { Store, Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useAuthStore } from "@/store/useAuthStore"
 
 export default function RegisterPage() {
   const router = useRouter()
+  const registerUser = useAuthStore(state => state.register)
   const [showPassword, setShowPassword] = useState(false)
+  
+  const [name, setName] = useState("")
+  const [storeName, setStoreName] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault()
-    // Dummy fast redirect
+    registerUser({ name, storeName, email, password })
     router.push("/dashboard")
   }
 
@@ -31,17 +38,39 @@ export default function RegisterPage() {
         <form onSubmit={handleRegister} className="space-y-5">
           <div className="space-y-2">
             <Label htmlFor="name" className="text-slate-600">Nama Lengkap</Label>
-            <Input id="name" placeholder="Budi Hartono" className="bg-slate-50 border-slate-200 h-12 rounded-xl" required />
+            <Input 
+              id="name" 
+              placeholder="Budi Hartono" 
+              className="bg-slate-50 border-slate-200 h-12 rounded-xl" 
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required 
+            />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="store" className="text-slate-600">Nama Toko/Stand</Label>
-            <Input id="store" placeholder="Es Teh Manis Budi" className="bg-slate-50 border-slate-200 h-12 rounded-xl" required />
+            <Label htmlFor="store" className="text-slate-600">Nama Toko / Stand</Label>
+            <Input 
+              id="store" 
+              placeholder="Es Teh Manis Budi" 
+              className="bg-slate-50 border-slate-200 h-12 rounded-xl" 
+              value={storeName}
+              onChange={(e) => setStoreName(e.target.value)}
+              required 
+            />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="email" className="text-slate-600">Email</Label>
-            <Input id="email" type="email" placeholder="contoh@email.com" className="bg-slate-50 border-slate-200 h-12 rounded-xl" required />
+            <Input 
+              id="email" 
+              type="email" 
+              placeholder="contoh@email.com" 
+              className="bg-slate-50 border-slate-200 h-12 rounded-xl" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required 
+            />
           </div>
 
           <div className="space-y-2">
@@ -52,6 +81,8 @@ export default function RegisterPage() {
                 type={showPassword ? "text" : "password"} 
                 placeholder="••••••••" 
                 className="bg-slate-50 border-slate-200 h-12 rounded-xl pr-12" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required 
               />
               <button 

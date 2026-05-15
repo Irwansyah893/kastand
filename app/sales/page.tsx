@@ -6,11 +6,13 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Minus, Plus, ShoppingCart, Trash2, X, CheckCircle2, Package } from "lucide-react"
 import { useCartStore } from "@/store/useCartStore"
 import { useProductStore } from "@/store/useProductStore"
+import { useTransactionStore } from "@/store/useTransactionStore"
 import Link from "next/link"
 
 export default function SalesPage() {
   const { items, addItem, removeItem, updateQuantity, clearCart, total } = useCartStore()
   const { products } = useProductStore()
+  const addTransaction = useTransactionStore(state => state.addTransaction)
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
 
@@ -18,6 +20,12 @@ export default function SalesPage() {
   const totalPrice = total()
 
   const handleCheckout = () => {
+    // Save to real transaction store
+    addTransaction({
+      items: [...items],
+      total: total()
+    })
+
     setShowSuccess(true)
     setTimeout(() => {
       setShowSuccess(false)

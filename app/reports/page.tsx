@@ -1,84 +1,118 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { CalendarDays, ArrowDown, ArrowUp, DollarSign } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { TrendingUp, Share2, Calendar, ChevronRight, Trash2, Printer, FileText } from "lucide-react"
+import { useTransactionStore } from "@/store/useTransactionStore"
+import { useAuthStore } from "@/store/useAuthStore"
 
 export default function ReportsPage() {
+  const { transactions, deleteTransaction } = useTransactionStore()
+  const user = useAuthStore(state => state.user)
+
+  const totalOmzet = transactions.reduce((acc, tx) => acc + tx.total, 0)
+  const totalTransaksi = transactions.length
+
+  const handleShareWA = () => {
+    const storeName = user?.storeName || "Toko Saya"
+    let message = `*LAPORAN PENJUALAN - ${storeName}*\n`
+    message += `----------------------------\n`
+    message += `Total Omzet: Rp ${totalOmzet.toLocaleString("id-ID")}\n`
+    message += `Total Transaksi: ${totalTransaksi}\n`
+    message += `----------------------------\n\n`
+    
+    transactions.slice(0, 5).forEach((tx, idx) => {
+      message += `${idx + 1}. [${tx.time}] Rp ${tx.total.toLocaleString("id-ID")}\n`
+    })
+
+    if (transactions.length > 5) message += `...dan ${transactions.length - 5} lainnya.\n`
+    
+    const encodedMessage = encodeURIComponent(message)
+    window.open(`https://wa.me/?text=${encodedMessage}`, '_blank')
+  }
+
   return (
     <div className="flex flex-col min-h-screen p-6 pt-12 bg-slate-50 pb-32">
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-800">Laporan Harian</h1>
-        <p className="text-slate-500">Rekapitulasi performa tokomu</p>
+      <header className="flex justify-between items-start mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Laporan Harian</h1>
+          <p className="text-slate-500 text-sm">{new Date().toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+        </div>
+        <Button variant="outline" size="icon" className="rounded-2xl border-slate-200" onClick={handleShareWA}>
+          <Share2 className="w-5 h-5 text-emerald-600" />
+        </Button>
       </header>
 
-      <div className="flex items-center gap-2 bg-white px-4 py-3 rounded-2xl shadow-sm border mb-6">
-        <CalendarDays className="w-5 h-5 text-emerald-500" />
-        <span className="font-medium text-slate-700 text-sm">Hari Ini, 14 Okt 2026</span>
-      </div>
-
-      <div className="space-y-4">
-        <Card className="bg-emerald-50 border-emerald-100 shadow-sm">
-          <CardContent className="p-5 flex items-center justify-between">
-            <div>
-              <span className="text-emerald-700 font-medium text-sm block mb-1">Total Omzet</span>
-              <span className="text-2xl font-bold text-emerald-900">Rp 450.000</span>
-            </div>
-            <div className="w-12 h-12 rounded-full bg-emerald-200/50 flex items-center justify-center">
-              <ArrowUp className="w-6 h-6 text-emerald-700" />
-            </div>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 gap-4 mb-8">
+        <Card className="border-0 shadow-sm bg-white rounded-[2rem]">
+          <CardContent className="p-6">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Total Omzet</span>
+            <h3 className="text-2xl font-black text-emerald-600">Rp {totalOmzet.toLocaleString("id-ID")}</h3>
           </CardContent>
         </Card>
-
-        <Card className="bg-orange-50 border-orange-100 shadow-sm">
-          <CardContent className="p-5 flex items-center justify-between">
-            <div>
-              <span className="text-orange-700 font-medium text-sm block mb-1">Pengeluaran</span>
-              <span className="text-2xl font-bold text-orange-900">Rp 150.000</span>
-            </div>
-            <div className="w-12 h-12 rounded-full bg-orange-200/50 flex items-center justify-center">
-              <ArrowDown className="w-6 h-6 text-orange-700" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-blue-50 border-blue-100 shadow-sm mt-4">
-          <CardContent className="p-5 flex items-center justify-between">
-            <div>
-              <span className="text-blue-700 font-medium text-sm block mb-1">Laba Bersih</span>
-              <span className="text-2xl font-bold text-blue-900">Rp 300.000</span>
-            </div>
-            <div className="w-12 h-12 rounded-full bg-blue-200/50 flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-blue-700" />
-            </div>
+        <Card className="border-0 shadow-sm bg-white rounded-[2rem]">
+          <CardContent className="p-6">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Transaksi</span>
+            <h3 className="text-2xl font-black text-slate-800">{totalTransaksi}</h3>
           </CardContent>
         </Card>
       </div>
 
-      <div className="mt-8">
-        <h3 className="font-semibold text-slate-800 mb-4">Produk Paling Laku</h3>
-        <Card className="shadow-sm border-0">
-          <CardContent className="p-0">
-            {[
-              { name: "Es Teh Manis", qty: 45, price: "Rp 225.000" },
-              { name: "Gorengan", qty: 30, price: "Rp 60.000" },
-              { name: "Es Jeruk", qty: 15, price: "Rp 90.000" },
-            ].map((item, i) => (
-              <div key={i} className="flex items-center justify-between p-4 border-b last:border-0">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500 text-sm">
-                    {i + 1}
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="font-bold text-slate-800 text-lg">Detail Penjualan</h3>
+        <Button variant="ghost" className="text-emerald-600 font-bold text-xs gap-2">
+          <FileText className="w-4 h-4" />
+          Ekspor PDF
+        </Button>
+      </header>
+
+      {transactions.length === 0 ? (
+        <div className="flex-1 flex flex-col items-center justify-center py-20 text-center opacity-30">
+          <TrendingUp className="w-16 h-16 mb-4" />
+          <p className="font-bold">Belum ada transaksi hari ini</p>
+          <p className="text-xs">Mulai jualan untuk melihat laporan</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {transactions.map((tx) => (
+            <Card key={tx.id} className="border-0 shadow-sm rounded-3xl overflow-hidden group">
+              <CardContent className="p-5 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600">
+                    <Calendar className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-800 text-sm">{item.name}</p>
-                    <p className="text-xs text-slate-500">{item.qty} terjual</p>
+                    <h4 className="font-bold text-slate-800">Rp {tx.total.toLocaleString("id-ID")}</h4>
+                    <p className="text-[10px] text-slate-400 font-medium">{tx.time} • {tx.items?.length || 0} Produk</p>
                   </div>
                 </div>
-                <span className="font-semibold text-emerald-600 text-sm">{item.price}</span>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="rounded-xl text-slate-300 hover:text-red-500 transition-colors"
+                    onClick={() => deleteTransaction(tx.id)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                  <ChevronRight className="w-5 h-5 text-slate-300" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Action Buttons */}
+      {transactions.length > 0 && (
+        <div className="mt-8 grid grid-cols-1 gap-4">
+          <Button className="h-14 rounded-2xl bg-slate-800 font-bold gap-2 shadow-lg shadow-slate-200" onClick={() => window.print()}>
+            <Printer className="w-5 h-5" />
+            Cetak Laporan
+          </Button>
+        </div>
+      )}
     </div>
   )
 }
