@@ -1,6 +1,7 @@
 "use client"
 
 import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { TrendingUp, Wallet, Package, ArrowRight, AlertTriangle, Receipt, QrCode, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { useAuthStore } from "@/store/useAuthStore"
