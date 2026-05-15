@@ -65,7 +65,7 @@ export default function ReportsPage() {
           <FileText className="w-4 h-4" />
           Ekspor PDF
         </Button>
-      </header>
+      </div>
 
       {transactions.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center py-20 text-center opacity-30">
