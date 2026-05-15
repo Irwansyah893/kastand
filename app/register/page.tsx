@@ -41,8 +41,9 @@ export default function RegisterPage() {
       registerStore({ name, storeName, email, password })
       
       router.push("/dashboard")
-    } catch (err) {
-      setError("Terjadi kesalahan jaringan.")
+    } catch (err: any) {
+      setError(`Kesalahan Teknis: ${err.message || "Koneksi Terputus"}`)
+      console.error("FULL REGISTER ERROR:", err)
     } finally {
       setLoading(false)
     }
