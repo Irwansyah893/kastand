@@ -33,7 +33,7 @@ export default function SalesPage() {
   }
 
   const getProductQty = (id: string) => {
-    return items.find(item => item.id === id)?.quantity || 0
+    return items.find(item => (item as any).id === id)?.quantity || 0
   }
 
   return (
@@ -118,7 +118,7 @@ export default function SalesPage() {
                 </div>
 
                 <div className="flex-1 overflow-auto space-y-6 mb-8 no-scrollbar">
-                  {items.map((item) => (
+                  {items.map((item: any) => (
                     <div key={item.id} className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <span className="text-3xl">{(item as any).image}</span>
