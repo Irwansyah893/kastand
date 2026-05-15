@@ -1,61 +1,27 @@
 "use server"
 
-import { PrismaClient } from "@prisma/client"
-
-// Inisialisasi prisma di dalam action untuk menghindari crash saat startup di Vercel
-const prisma = new PrismaClient()
+// KITA NONAKTIFKAN PRISMA DULU UNTUK TESTING
+// import { PrismaClient } from "@prisma/client"
 
 export async function registerUserAction(formData: any) {
   const { name, storeName, email, password } = formData
 
   try {
-    if (!prisma) {
-      return { success: false, message: "Koneksi Database tidak terinisialisasi." }
-    }
-
-    const user = await prisma.user.create({
-      data: {
-        full_name: name,
-        email: email,
-        stores: {
-          create: {
-            store_name: storeName,
-            store_type: "UMKM"
-          }
-        }
-      }
-    })
-
-    return { 
-      success: true, 
-      user: { id: user.id, email: user.email } 
-    }
-  } catch (error: any) {
-    // Kita tangkap error dan ubah menjadi string sederhana agar tidak dianggap "Sensitive" oleh Next.js
-    const errorMsg = error.message || "Unknown Database Error"
-    console.error("DB_ERROR_LOG:", errorMsg)
+    console.log("Mencoba mendaftar:", email)
+    
+    // KITA LOGIN-KAN SAJA SECARA OTOMATIS (MOCK)
+    // Jika kode ini berhasil, berarti Vercel Anda SEHAT. 
+    // Jika kode ini tetap error, berarti ada masalah pada konfigurasi Next.js/Vercel Anda.
     
     return { 
-      success: false, 
-      message: `Database Error: ${errorMsg.substring(0, 50)}... (Cek koneksi Supabase Anda)` 
+      success: true, 
+      user: { id: "test-123", email: email, name: name } 
     }
-  } finally {
-    await prisma.$disconnect()
+  } catch (error: any) {
+    return { success: false, message: "Error Internal Server" }
   }
 }
 
 export async function loginUserAction(email: string) {
-  const prisma = new PrismaClient()
-  try {
-    const user = await prisma.user.findUnique({
-      where: { email },
-      include: { stores: true }
-    })
-    if (!user) return { success: false, message: "User tidak ditemukan." }
-    return { success: true, user }
-  } catch (error: any) {
-    return { success: false, message: "Gagal terhubung ke Database." }
-  } finally {
-    await prisma.$disconnect()
-  }
+  return { success: true, user: { email, stores: [{ store_name: "Toko Test" }] } }
 }
