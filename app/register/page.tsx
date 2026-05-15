@@ -1,14 +1,16 @@
 "use client"
 
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Store } from "lucide-react"
+import { Store, Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
 export default function RegisterPage() {
   const router = useRouter()
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault()
@@ -29,25 +31,40 @@ export default function RegisterPage() {
         <form onSubmit={handleRegister} className="space-y-5">
           <div className="space-y-2">
             <Label htmlFor="name" className="text-slate-600">Nama Lengkap</Label>
-            <Input id="name" placeholder="Budi Hartono" className="bg-slate-50 border-slate-200" required />
+            <Input id="name" placeholder="Budi Hartono" className="bg-slate-50 border-slate-200 h-12 rounded-xl" required />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="store" className="text-slate-600">Nama Toko/Stand</Label>
-            <Input id="store" placeholder="Es Teh Manis Budi" className="bg-slate-50 border-slate-200" required />
+            <Input id="store" placeholder="Es Teh Manis Budi" className="bg-slate-50 border-slate-200 h-12 rounded-xl" required />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="email" className="text-slate-600">Email</Label>
-            <Input id="email" type="email" placeholder="contoh@email.com" className="bg-slate-50 border-slate-200" required />
+            <Input id="email" type="email" placeholder="contoh@email.com" className="bg-slate-50 border-slate-200 h-12 rounded-xl" required />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="password" className="text-slate-600">Password</Label>
-            <Input id="password" type="password" placeholder="••••••••" className="bg-slate-50 border-slate-200" required />
+            <div className="relative">
+              <Input 
+                id="password" 
+                type={showPassword ? "text" : "password"} 
+                placeholder="••••••••" 
+                className="bg-slate-50 border-slate-200 h-12 rounded-xl pr-12" 
+                required 
+              />
+              <button 
+                type="button"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
           </div>
 
-          <Button type="submit" className="w-full h-14 text-base font-semibold shadow-lg shadow-emerald-500/25 mt-4">
+          <Button type="submit" className="w-full h-14 text-base font-semibold shadow-lg shadow-emerald-500/25 mt-4 rounded-2xl">
             Buat Akun
           </Button>
         </form>

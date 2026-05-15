@@ -1,9 +1,10 @@
 "use client"
 
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Store } from "lucide-react"
+import { Store, Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
@@ -20,6 +21,7 @@ type LoginFormValues = z.infer<typeof loginSchema>
 export default function LoginPage() {
   const router = useRouter()
   
+  const [showPassword, setShowPassword] = useState(false)
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
   })
@@ -49,7 +51,22 @@ export default function LoginPage() {
 
           <div className="space-y-2">
             <Label htmlFor="password" className="text-slate-600">Password</Label>
-            <Input id="password" type="password" placeholder="••••••••" className="bg-slate-50 border-slate-200" {...register("password")} />
+            <div className="relative">
+              <Input 
+                id="password" 
+                type={showPassword ? "text" : "password"} 
+                placeholder="••••••••" 
+                className="bg-slate-50 border-slate-200 pr-10" 
+                {...register("password")} 
+              />
+              <button 
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
             {errors.password && <p className="text-red-500 text-xs">{errors.password.message}</p>}
           </div>
 

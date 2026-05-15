@@ -3,20 +3,14 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Minus, Plus, ShoppingCart, Trash2, X, CheckCircle2 } from "lucide-react"
+import { Minus, Plus, ShoppingCart, Trash2, X, CheckCircle2, Package } from "lucide-react"
 import { useCartStore } from "@/store/useCartStore"
-
-// Dummy data for fast rendering
-const DUMMY_PRODUCTS = [
-  { id: "1", name: "Es Teh Manis", price: 5000, category: "Minuman", image: "🍵" },
-  { id: "2", name: "Es Jeruk", price: 6000, category: "Minuman", image: "🍊" },
-  { id: "3", name: "Kopi Hitam", price: 4000, category: "Minuman", image: "☕" },
-  { id: "4", name: "Gorengan", price: 2000, category: "Makanan", image: "🥟" },
-  { id: "5", name: "Indomie Rebus", price: 10000, category: "Makanan", image: "🍜" },
-]
+import { useProductStore } from "@/store/useProductStore"
+import Link from "next/link"
 
 export default function SalesPage() {
   const { items, addItem, removeItem, updateQuantity, clearCart, total } = useCartStore()
+  const { products } = useProductStore()
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
 
@@ -52,31 +46,44 @@ export default function SalesPage() {
         </div>
       </header>
 
-      <div className="p-4 grid grid-cols-2 gap-3">
-        {DUMMY_PRODUCTS.map((product) => {
-          const qty = getProductQty(product.id)
-          return (
-            <Card 
-              key={product.id} 
-              className={`border-2 transition-all active:scale-90 cursor-pointer ${
-                qty > 0 ? "border-emerald-500 bg-emerald-50/50" : "border-transparent shadow-sm"
-              }`}
-              onClick={() => addItem(product as any)}
-            >
-              <CardContent className="p-4 flex flex-col items-center text-center relative">
-                {qty > 0 && (
-                  <span className="absolute top-2 right-2 bg-emerald-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center shadow-md">
-                    {qty}
-                  </span>
-                )}
-                <span className="text-4xl mb-3 block">{product.image}</span>
-                <span className="font-semibold text-slate-800 text-sm mb-1 leading-tight">{product.name}</span>
-                <span className="text-emerald-600 font-bold text-sm">Rp {product.price.toLocaleString("id-ID")}</span>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
+      {products.length === 0 ? (
+        <div className="flex-1 flex flex-col items-center justify-center py-20 text-center px-8">
+          <div className="w-20 h-20 bg-slate-100 rounded-[2rem] flex items-center justify-center mb-4 text-slate-400">
+            <Package className="w-10 h-10" />
+          </div>
+          <h3 className="font-bold text-slate-800 mb-1">Belum ada produk jualan</h3>
+          <p className="text-slate-500 text-sm mb-6">Anda perlu menambahkan produk di menu Produk terlebih dahulu.</p>
+          <Button asChild className="rounded-xl px-8">
+            <Link href="/products">Tambah Produk Sekarang</Link>
+          </Button>
+        </div>
+      ) : (
+        <div className="p-4 grid grid-cols-2 gap-3">
+          {products.filter(p => p.isActive).map((product) => {
+            const qty = getProductQty(product.id)
+            return (
+              <Card 
+                key={product.id} 
+                className={`border-2 transition-all active:scale-90 cursor-pointer ${
+                  qty > 0 ? "border-emerald-500 bg-emerald-50/50" : "border-transparent shadow-sm"
+                }`}
+                onClick={() => addItem(product as any)}
+              >
+                <CardContent className="p-4 flex flex-col items-center text-center relative">
+                  {qty > 0 && (
+                    <span className="absolute top-2 right-2 bg-emerald-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center shadow-md">
+                      {qty}
+                    </span>
+                  )}
+                  <span className="text-4xl mb-3 block">{product.image}</span>
+                  <span className="font-semibold text-slate-800 text-sm mb-1 leading-tight">{product.name}</span>
+                  <span className="text-emerald-600 font-bold text-sm">Rp {product.price.toLocaleString("id-ID")}</span>
+                </CardContent>
+              </Card>
+            )
+          })}
+        </div>
+      )}
 
       {/* Floating Cart Button */}
       {totalItems > 0 && (
