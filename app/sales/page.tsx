@@ -69,7 +69,7 @@ export default function SalesPage() {
         </div>
       ) : (
         <div className="p-4 grid grid-cols-2 gap-3">
-          {products.filter(p => p.isActive).map((product) => {
+          {products.filter(p => p.category === "Utama" || !p.category).map((product) => {
             const qty = getProductQty(product.id)
             return (
               <Card 
