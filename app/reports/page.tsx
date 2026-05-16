@@ -52,7 +52,7 @@ export default function ReportsPage() {
     message += `_Laporan dikirim otomatis via KasStand App_`
     
     const encodedMessage = encodeURIComponent(message)
-    window.open(`https://wa.me/?text=${encodedMessage}`, '_blank')
+    window.open(`https://wa.me/6282285026241?text=${encodedMessage}`, '_blank')
   }
 
   return (
