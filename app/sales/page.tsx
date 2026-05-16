@@ -15,6 +15,7 @@ export default function SalesPage() {
   const addTransaction = useTransactionStore(state => state.addTransaction)
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "QRIS">("CASH")
 
   const totalItems = items.reduce((acc, item) => acc + item.quantity, 0)
   const totalPrice = total()
@@ -23,8 +24,9 @@ export default function SalesPage() {
     // Save to real transaction store
     addTransaction({
       items: [...items],
-      total: total()
-    })
+      total: total(),
+      paymentMethod: paymentMethod // Pass the payment method
+    } as any)
 
     setShowSuccess(true)
     setTimeout(() => {
@@ -166,6 +168,21 @@ export default function SalesPage() {
                 </div>
 
                 <div className="space-y-4 pt-4">
+                  <div className="flex gap-2 mb-4">
+                    <Button 
+                      className={`flex-1 h-12 rounded-xl font-bold ${paymentMethod === 'CASH' ? 'bg-slate-800' : 'bg-slate-100 text-slate-400'}`}
+                      onClick={() => setPaymentMethod('CASH')}
+                    >
+                      💵 CASH
+                    </Button>
+                    <Button 
+                      className={`flex-1 h-12 rounded-xl font-bold ${paymentMethod === 'QRIS' ? 'bg-emerald-600' : 'bg-slate-100 text-slate-400'}`}
+                      onClick={() => setPaymentMethod('QRIS')}
+                    >
+                      📱 QRIS
+                    </Button>
+                  </div>
+
                   <div className="flex justify-between items-end mb-2">
                     <span className="text-slate-400 font-medium">Total Pembayaran</span>
                     <span className="text-3xl font-black text-slate-800">Rp {totalPrice.toLocaleString("id-ID")}</span>

@@ -6,50 +6,84 @@ import { TrendingUp, Share2, Calendar, ChevronRight, Trash2, Printer, FileText, 
 import { useTransactionStore } from "@/store/useTransactionStore"
 import { useExpenseStore } from "@/store/useExpenseStore"
 import { useAuthStore } from "@/store/useAuthStore"
+import { useProductStore } from "@/store/useProductStore"
 
 export default function ReportsPage() {
   const { transactions, deleteTransaction } = useTransactionStore()
   const { expenses } = useExpenseStore()
+  const { products } = useProductStore()
   const user = useAuthStore(state => state.user)
 
-  const totalOmzet = transactions.reduce((acc, tx) => acc + tx.total, 0)
+  // Perhitungan Keuangan
+  const cashTotal = transactions.filter(tx => (tx as any).paymentMethod === "CASH").reduce((acc, tx) => acc + tx.total, 0)
+  const qrisTotal = transactions.filter(tx => (tx as any).paymentMethod === "QRIS").reduce((acc, tx) => acc + tx.total, 0)
+  const totalOmzet = cashTotal + qrisTotal
   const totalExpense = expenses.reduce((acc, ex) => acc + ex.amount, 0)
-  const totalTransaksi = transactions.length
-  const untungBersih = totalOmzet - totalExpense
+  const totalAkhir = totalOmzet - totalExpense
+
+  // Perhitungan Terjual per Item
+  const itemSummary: Record<string, { qty: number, total: number, price: number }> = {}
+  transactions.forEach(tx => {
+    tx.items.forEach(item => {
+      if (!itemSummary[item.name]) {
+        itemSummary[item.name] = { qty: 0, total: 0, price: item.price }
+      }
+      itemSummary[item.name].qty += item.quantity
+      itemSummary[item.name].total += item.price * item.quantity
+    })
+  })
 
   const handleShareWA = () => {
-    const storeName = user?.storeName || "Toko Saya"
-    const dateStr = new Date().toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' })
+    const storeName = user?.storeName || "TENAN PARADISE"
+    const dateStr = new Date().toLocaleDateString("id-ID", { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
     
-    let message = `*📊 LAPORAN HARIAN KASSTAND*\n`
-    message += `*${storeName}*\n`
-    message += `📅 Tanggal: ${dateStr}\n`
-    message += `------------------------------------------\n\n`
+    let message = `🦋${storeName.toUpperCase()}  ${dateStr}\n\n`
     
-    message += `*💰 RINGKASAN KEUANGAN*\n`
-    message += `• Total Omzet: Rp ${totalOmzet.toLocaleString("id-ID")}\n`
-    message += `• Total Belanja: Rp ${totalExpense.toLocaleString("id-ID")}\n`
-    message += `• *Untung Bersih: Rp ${untungBersih.toLocaleString("id-ID")}*\n\n`
+    message += `UANG CASH = RP${cashTotal.toLocaleString("id-ID")}\n`
+    message += `QRIS = ${qrisTotal.toLocaleString("id-ID")}\n`
+    message += `Total = ${totalOmzet.toLocaleString("id-ID")}\n\n`
     
-    message += `*🛒 AKTIVITAS JUALAN*\n`
-    message += `• Total Transaksi: ${totalTransaksi}\n`
-    
-    if (transactions.length > 0) {
-      message += `\n*📝 DETAIL TRANSAKSI TERAKHIR:*\n`
-      transactions.slice(0, 10).forEach((tx, idx) => {
-        message += `${idx + 1}. [${tx.time}] - Rp ${tx.total.toLocaleString("id-ID")}\n`
-      })
-    }
-
+    message += `Pengeluaran\n`
     if (expenses.length > 0) {
-      message += `\n*💸 DETAIL PENGELUARAN:*\n`
-      expenses.slice(0, 5).forEach((ex, idx) => {
-        message += `- ${ex.title}: Rp ${ex.amount.toLocaleString("id-ID")}\n`
+      expenses.forEach(ex => {
+        message += `${ex.title} (${ex.amount.toLocaleString("id-ID")})\n`
       })
+    } else {
+      message += `-\n`
     }
-
-    message += `\n------------------------------------------\n`
-    message += `_Laporan dikirim otomatis via KasStand App_`
+    
+    message += `\nTotal penjualan+Pengeluaran\n`
+    message += `=${totalAkhir.toLocaleString("id-ID")}\n\n`
+    
+    message += `❄️❄️TERJUAL❄️❄️\n`
+    Object.entries(itemSummary).forEach(([name, data]) => {
+      message += `❄️${name.toUpperCase()} = ${data.price.toLocaleString("id-ID")} × ${data.qty}porsi = ${data.total.toLocaleString("id-ID")}\n`
+    })
+    
+    message += `\nTotal = `
+    const totalsList = Object.values(itemSummary).map(d => d.total.toLocaleString("id-ID"))
+    message += totalsList.join(" + ") + " = " + totalOmzet.toLocaleString("id-ID") + "\n\n"
+    
+    message += `🌲STOK AWAL\n`
+    products.forEach(p => {
+      const terjual = itemSummary[p.name]?.qty || 0
+      message += `${p.name.toUpperCase()} = ${ (p.stock || 0) + terjual }\n`
+    })
+    
+    message += `\n🌲STOK AKHIR\n`
+    products.forEach(p => {
+      message += `${p.name.toUpperCase()} = ${p.stock || 0}\n`
+    })
+    
+    message += `\n🦋Yang perlu di Beli\n`
+    const needToBuy = products.filter(p => (p.stock || 0) < 5).map(p => p.name.toLowerCase())
+    if (needToBuy.length > 0) {
+      message += needToBuy.join("\n")
+    } else {
+      message += `Stok aman`
+    }
+    
+    message += `\n\n_Dikirim otomatis via KasStand_`
     
     const encodedMessage = encodeURIComponent(message)
     window.open(`https://wa.me/6282285026241?text=${encodedMessage}`, '_blank')
@@ -72,21 +106,21 @@ export default function ReportsPage() {
       <div className="grid grid-cols-1 gap-4 mb-8">
         <Card className="border-0 shadow-lg bg-emerald-600 text-white rounded-[2rem]">
           <CardContent className="p-8">
-            <span className="text-emerald-100 font-medium text-xs uppercase tracking-widest block mb-2">Untung Bersih Hari Ini</span>
-            <h3 className="text-4xl font-black italic">Rp {untungBersih.toLocaleString("id-ID")}</h3>
+            <span className="text-emerald-100 font-medium text-xs uppercase tracking-widest block mb-2">Total Akhir Hari Ini</span>
+            <h3 className="text-4xl font-black italic">Rp {totalAkhir.toLocaleString("id-ID")}</h3>
           </CardContent>
         </Card>
         <div className="grid grid-cols-2 gap-4">
           <Card className="border-0 shadow-sm bg-white rounded-[2rem]">
             <CardContent className="p-6">
-              <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Total Omzet</span>
-              <h3 className="text-xl font-bold text-slate-800">Rp {totalOmzet.toLocaleString("id-ID")}</h3>
+              <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">CASH</span>
+              <h3 className="text-xl font-bold text-slate-800">Rp {cashTotal.toLocaleString("id-ID")}</h3>
             </CardContent>
           </Card>
           <Card className="border-0 shadow-sm bg-white rounded-[2rem]">
             <CardContent className="p-6">
-              <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Total Belanja</span>
-              <h3 className="text-xl font-bold text-orange-600">Rp {totalExpense.toLocaleString("id-ID")}</h3>
+              <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">QRIS</span>
+              <h3 className="text-xl font-bold text-blue-600">Rp {qrisTotal.toLocaleString("id-ID")}</h3>
             </CardContent>
           </Card>
         </div>
@@ -121,7 +155,9 @@ export default function ReportsPage() {
                   </div>
                   <div>
                     <h4 className="font-bold text-slate-800">Rp {tx.total.toLocaleString("id-ID")}</h4>
-                    <p className="text-[10px] text-slate-400 font-medium">{tx.time} • {tx.items?.length || 0} Produk</p>
+                    <p className="text-[10px] text-slate-400 font-medium">
+                      {tx.time} • {(tx as any).paymentMethod}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -133,21 +169,10 @@ export default function ReportsPage() {
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
-                  <ChevronRight className="w-5 h-5 text-slate-300" />
                 </div>
               </CardContent>
             </Card>
           ))}
-        </div>
-      )}
-
-      {/* Action Buttons */}
-      {transactions.length > 0 && (
-        <div className="mt-8 grid grid-cols-1 gap-4 no-print">
-          <Button className="h-14 rounded-2xl bg-slate-800 font-bold gap-2 shadow-lg shadow-slate-200" onClick={() => window.print()}>
-            <Printer className="w-5 h-5" />
-            Cetak Struk Laporan
-          </Button>
         </div>
       )}
     </div>
