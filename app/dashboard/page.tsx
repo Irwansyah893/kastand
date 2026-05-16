@@ -9,7 +9,7 @@ import { useTransactionStore } from "@/store/useTransactionStore"
 import { useExpenseStore } from "@/store/useExpenseStore"
 import { useProductStore } from "@/store/useProductStore"
 import { usePWAStore } from "@/store/usePWAStore"
-import { Smartphone, Download, X } from "lucide-react"
+import { Smartphone, Download, X, Send } from "lucide-react"
 
 export default function DashboardPage() {
   const user = useAuthStore(state => state.user)
@@ -24,6 +24,23 @@ export default function DashboardPage() {
   const totalExpense = expenses.reduce((acc, ex) => acc + ex.amount, 0)
   const profit = todayOmzet - totalExpense
   const lowStockCount = products.filter(p => (p.stock || 0) < 10).length
+
+  const handleShareWA = () => {
+    const storeName = user?.storeName || "Toko Saya"
+    const dateStr = new Date().toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' })
+    
+    let message = `*📊 LAPORAN SINGKAT - ${storeName}*\n`
+    message += `📅 Tanggal: ${dateStr}\n`
+    message += `----------------------------\n`
+    message += `• Omzet: Rp ${todayOmzet.toLocaleString("id-ID")}\n`
+    message += `• Belanja: Rp ${totalExpense.toLocaleString("id-ID")}\n`
+    message += `• *Untung: Rp ${profit.toLocaleString("id-ID")}*\n`
+    message += `----------------------------\n`
+    message += `_Sent via KasStand App_`
+    
+    const encodedMessage = encodeURIComponent(message)
+    window.open(`https://wa.me/?text=${encodedMessage}`, '_blank')
+  }
 
   return (
     <div className="flex flex-col min-h-screen p-6 pt-12 bg-slate-50 pb-32">
@@ -142,6 +159,16 @@ export default function DashboardPage() {
           </div>
           <span className="font-bold text-slate-700 text-sm">Catat Belanja</span>
         </Link>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 mb-4">
+        <Button 
+          className="h-16 rounded-[2.5rem] bg-emerald-600 text-white font-bold gap-3 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all"
+          onClick={handleShareWA}
+        >
+          <Send className="w-5 h-5" />
+          Kirim Laporan ke WA
+        </Button>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
