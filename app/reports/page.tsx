@@ -15,11 +15,11 @@ export default function ReportsPage() {
   const user = useAuthStore(state => state.user)
 
   // Perhitungan Keuangan
-  const cashTotal = transactions.filter(tx => (tx as any).paymentMethod === "CASH").reduce((acc, tx) => acc + tx.total, 0)
-  const qrisTotal = transactions.filter(tx => (tx as any).paymentMethod === "QRIS").reduce((acc, tx) => acc + tx.total, 0)
+  const cashTotal = transactions.filter(tx => tx.paymentMethod === "CASH").reduce((acc, tx) => acc + tx.total, 0)
+  const qrisTotal = transactions.filter(tx => tx.paymentMethod === "QRIS").reduce((acc, tx) => acc + tx.total, 0)
   const totalOmzet = cashTotal + qrisTotal
   const totalExpense = expenses.reduce((acc, ex) => acc + ex.amount, 0)
-  const totalPenjualanPlusPengeluaran = totalOmzet - totalExpense
+  const netTotal = totalOmzet - totalExpense
 
   // Perhitungan Terjual per Item
   const itemSummary: Record<string, { qty: number, total: number, price: number }> = {}
@@ -54,7 +54,7 @@ export default function ReportsPage() {
     }
     
     message += `\nTotal penjualan+Pengeluaran\n`
-    message += `=${totalPenjualanPlusPengeluaran.toLocaleString("id-ID")}\n\n`
+    message += `=${netTotal.toLocaleString("id-ID")}\n\n`
     
     message += `❄️❄️TERJUAL❄️❄️\n`
     Object.entries(itemSummary).forEach(([name, data]) => {
@@ -66,18 +66,22 @@ export default function ReportsPage() {
     message += totalsList.join(" +") + "=" + totalOmzet.toLocaleString("id-ID") + "\n\n\n\n"
     
     message += `🌲STOK AWAL\n`
-    products.filter(p => p.category === "Utama" || !p.category).forEach(p => {
-      const terjual = itemSummary[p.name]?.qty || 0
-      message += ` ${p.name.toUpperCase().padEnd(12)} = ${ (p.stock || 0) + terjual }\n`
+    products.forEach(p => {
+      if (!p.name.toLowerCase().includes('saos') && !p.name.toLowerCase().includes('kecap')) {
+        const terjual = itemSummary[p.name]?.qty || 0
+        message += ` ${p.name.toUpperCase().padEnd(12)} = ${ (p.stock || 0) + terjual }\n`
+      }
     })
     
     message += ` \n🌲STOK AKHIR \n`
-    products.filter(p => p.category === "Utama" || !p.category).forEach(p => {
-      message += `${p.name.toUpperCase().padEnd(14)} =${p.stock || 0}\n`
+    products.forEach(p => {
+      if (!p.name.toLowerCase().includes('saos') && !p.name.toLowerCase().includes('kecap')) {
+        message += `${p.name.toUpperCase().padEnd(14)} =${p.stock || 0}\n`
+      }
     })
     
     message += `\n\n 🦋STOK BARANG\n`
-    products.filter(p => p.category === "Inventaris").forEach(p => {
+    products.forEach(p => {
       message += `${p.name}=${p.stock || "-"}\n`
     })
     
@@ -110,8 +114,8 @@ export default function ReportsPage() {
       <div className="grid grid-cols-1 gap-4 mb-8">
         <Card className="border-0 shadow-lg bg-emerald-600 text-white rounded-[2rem]">
           <CardContent className="p-8">
-            <span className="text-emerald-100 font-medium text-xs uppercase tracking-widest block mb-2">Total Akhir Hari Ini</span>
-            <h3 className="text-4xl font-black italic">Rp {totalPenjualanPlusPengeluaran.toLocaleString("id-ID")}</h3>
+            <span className="text-emerald-100 font-medium text-xs uppercase tracking-widest block mb-2">Total Penjualan + Pengeluaran</span>
+            <h3 className="text-4xl font-black italic">Rp {netTotal.toLocaleString("id-ID")}</h3>
           </CardContent>
         </Card>
         <div className="grid grid-cols-2 gap-4">
@@ -160,7 +164,7 @@ export default function ReportsPage() {
                   <div>
                     <h4 className="font-bold text-slate-800">Rp {tx.total.toLocaleString("id-ID")}</h4>
                     <p className="text-[10px] text-slate-400 font-medium">
-                      {tx.time} • {(tx as any).paymentMethod}
+                      {tx.time} • {tx.paymentMethod}
                     </p>
                   </div>
                 </div>
