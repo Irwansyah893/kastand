@@ -5,158 +5,182 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Search, Plus, MoreVertical, Edit2, Trash2, X, Package } from "lucide-react"
+import { Plus, Search, Package, Trash2, Edit3, X, Save } from "lucide-react"
 import { useProductStore, Product } from "@/store/useProductStore"
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger,
+  DialogFooter 
+} from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export default function ProductsPage() {
   const { products, addProduct, updateProduct, deleteProduct } = useProductStore()
   const [searchTerm, setSearchTerm] = useState("")
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
 
   // Form states
   const [name, setName] = useState("")
   const [price, setPrice] = useState("")
-  const [category, setCategory] = useState("")
-  const [image, setImage] = useState("📦")
+  const [stock, setStock] = useState("")
+  const [initialStock, setInitialStock] = useState("")
+  const [category, setCategory] = useState<"Utama" | "Inventaris">("Utama")
+
+  const resetForm = () => {
+    setName("")
+    setPrice("")
+    setStock("")
+    setInitialStock("")
+    setCategory("Utama")
+    setEditingProduct(null)
+  }
+
+  const handleSave = () => {
+    const productData = {
+      name,
+      price: Number(price),
+      stock: Number(stock),
+      initialStock: Number(initialStock),
+      category
+    }
+
+    if (editingProduct) {
+      updateProduct(editingProduct.id, productData)
+    } else {
+      addProduct(productData)
+    }
+    
+    setIsOpen(false)
+    resetForm()
+  }
+
+  const handleEdit = (product: Product) => {
+    setEditingProduct(product)
+    setName(product.name)
+    setPrice(product.price.toString())
+    setStock(product.stock.toString())
+    setInitialStock(product.initialStock?.toString() || "0")
+    setCategory(product.category || "Utama")
+    setIsOpen(true)
+  }
 
   const filteredProducts = products.filter(p => 
     p.name.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const handleSave = () => {
-    if (!name || !price) return
-
-    if (editingProduct) {
-      updateProduct(editingProduct.id, {
-        name,
-        price: parseFloat(price),
-        category,
-        image,
-      })
-    } else {
-      addProduct({
-        name,
-        price: parseFloat(price),
-        category,
-        image,
-        isActive: true,
-        stock: 100
-      })
-    }
-    closeModal()
-  }
-
-  const openEdit = (p: Product) => {
-    setEditingProduct(p)
-    setName(p.name)
-    setPrice(p.price.toString())
-    setCategory(p.category)
-    setImage(p.image)
-    setIsAddModalOpen(true)
-  }
-
-  const closeModal = () => {
-    setIsAddModalOpen(false)
-    setEditingProduct(null)
-    setName("")
-    setPrice("")
-    setCategory("")
-    setImage("📦")
-  }
-
   return (
     <div className="flex flex-col min-h-screen p-6 pt-12 bg-slate-50 pb-32">
-      <header className="flex justify-between items-center mb-8">
+      <header className="flex justify-between items-start mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Semua Produk</h1>
-          <p className="text-slate-500 text-sm">Kelola stok & harga jualan</p>
+          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Daftar Produk</h1>
+          <p className="text-slate-500 text-sm">Kelola stok jualan & inventaris</p>
         </div>
-        <Button 
-          className="w-12 h-12 rounded-2xl shadow-lg shadow-emerald-500/20 p-0"
-          onClick={() => setIsAddModalOpen(true)}
-        >
-          <Plus className="w-6 h-6" />
-        </Button>
+        <Dialog open={isOpen} onOpenChange={(open) => {
+          setIsOpen(open)
+          if (!open) resetForm()
+        }}>
+          <DialogTrigger asChild>
+            <Button className="rounded-2xl bg-emerald-600 shadow-lg shadow-emerald-500/20 gap-2">
+              <Plus className="w-4 h-4" />
+              Tambah
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="rounded-3xl max-w-[90vw]">
+            <DialogHeader>
+              <DialogTitle>{editingProduct ? "Edit Produk" : "Tambah Produk Baru"}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Nama Produk / Barang</Label>
+                <Input placeholder="Contoh: Soto Ayam" value={name} onChange={(e) => setName(e.target.value)} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Harga Jual</Label>
+                  <Input type="number" placeholder="0" value={price} onChange={(e) => setPrice(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Kategori</Label>
+                  <Select value={category} onValueChange={(val: any) => setCategory(val)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Utama">Utama (Jualan)</SelectItem>
+                      <SelectItem value="Inventaris">Inventaris (Bahan)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Stok Awal</Label>
+                  <Input type="number" placeholder="0" value={initialStock} onChange={(e) => setInitialStock(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Stok Akhir/Sekarang</Label>
+                  <Input type="number" placeholder="0" value={stock} onChange={(e) => setStock(e.target.value)} />
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button className="w-full h-12 rounded-xl bg-emerald-600" onClick={handleSave}>
+                <Save className="w-4 h-4 mr-2" />
+                Simpan Produk
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </header>
 
       <div className="relative mb-6">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
         <Input 
-          placeholder="Cari produk..." 
-          className="pl-12 h-14 rounded-2xl border-0 shadow-sm bg-white"
+          className="pl-12 h-14 bg-white border-0 shadow-sm rounded-2xl" 
+          placeholder="Cari nama barang..." 
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
 
-      {products.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center py-20 text-center">
-          <div className="w-20 h-20 bg-slate-100 rounded-[2rem] flex items-center justify-center mb-4 text-slate-400">
-            <Package className="w-10 h-10" />
-          </div>
-          <h3 className="font-bold text-slate-800 mb-1">Belum ada produk</h3>
-          <p className="text-slate-500 text-sm mb-6">Tambahkan produk pertama Anda<br/>untuk mulai jualan.</p>
-          <Button onClick={() => setIsAddModalOpen(true)} className="rounded-xl px-8">
-            Tambah Produk
-          </Button>
+      {filteredProducts.length === 0 ? (
+        <div className="flex-1 flex flex-col items-center justify-center py-20 text-center opacity-30">
+          <Package className="w-16 h-16 mb-4" />
+          <p className="font-bold text-lg">Belum ada barang</p>
+          <p className="text-sm">Klik tombol Tambah untuk memulai</p>
         </div>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid grid-cols-1 gap-4">
           {filteredProducts.map((product) => (
-            <Card key={product.id} className="border-0 shadow-sm rounded-3xl overflow-hidden group">
-              <CardContent className="p-4 flex items-center gap-4">
-                <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-2xl shadow-inner">
-                  {product.image}
+            <Card key={product.id} className="border-0 shadow-sm rounded-3xl overflow-hidden active:scale-[0.98] transition-all">
+              <CardContent className="p-5 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg ${product.category === 'Utama' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'}`}>
+                    {product.name.charAt(0)}
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-800">{product.name}</h3>
+                    <p className="text-xs text-slate-400">
+                      Rp {product.price.toLocaleString("id-ID")} • 
+                      Stok: {product.stock} {product.category === 'Inventaris' && '(Inv)'}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-slate-800">{product.name}</h3>
-                  <p className="text-emerald-600 font-extrabold">Rp {product.price.toLocaleString("id-ID")}</p>
-                </div>
-                <div className="flex gap-1">
-                  <Button variant="ghost" size="icon" className="rounded-xl text-slate-400" onClick={() => openEdit(product)}>
-                    <Edit2 className="w-4 h-4" />
+                <div className="flex gap-2">
+                  <Button variant="ghost" size="icon" className="rounded-xl text-slate-400" onClick={() => handleEdit(product)}>
+                    <Edit3 className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="rounded-xl text-red-300 hover:text-red-500" onClick={() => deleteProduct(product.id)}>
+                  <Button variant="ghost" size="icon" className="rounded-xl text-slate-400 hover:text-red-500" onClick={() => deleteProduct(product.id)}>
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
               </CardContent>
             </Card>
           ))}
-        </div>
-      )}
-
-      {/* Add/Edit Modal */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex flex-col justify-end max-w-md mx-auto">
-          <div className="bg-white rounded-t-[3rem] p-8 animate-in slide-in-from-bottom duration-300">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-2xl font-bold text-slate-800">{editingProduct ? "Edit Produk" : "Tambah Produk"}</h2>
-              <Button variant="ghost" size="icon" onClick={closeModal} className="rounded-full bg-slate-100">
-                <X className="w-6 h-6 text-slate-500" />
-              </Button>
-            </div>
-
-            <div className="space-y-5 mb-8">
-              <div className="space-y-2">
-                <Label>Nama Produk</Label>
-                <Input placeholder="Contoh: Es Teh Manis" value={name} onChange={(e) => setName(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>Harga Jual (Rp)</Label>
-                <Input type="number" placeholder="5000" value={price} onChange={(e) => setPrice(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>Emoji / Icon</Label>
-                <Input placeholder="🍵" value={image} onChange={(e) => setImage(e.target.value)} />
-              </div>
-            </div>
-
-            <Button className="w-full h-14 text-lg font-bold rounded-2xl shadow-xl shadow-emerald-500/20" onClick={handleSave}>
-              Simpan Produk
-            </Button>
-          </div>
         </div>
       )}
     </div>
