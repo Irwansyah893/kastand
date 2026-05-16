@@ -26,17 +26,77 @@ export default function DashboardPage() {
   const lowStockCount = products.filter(p => (p.stock || 0) < 10).length
 
   const handleShareWA = () => {
-    const storeName = user?.storeName || "Toko Saya"
-    const dateStr = new Date().toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' })
+    const storeName = user?.storeName || "TENAN PARADISE"
+    const dateStr = new Date().toLocaleDateString("id-ID", { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
     
-    let message = `*📊 LAPORAN SINGKAT - ${storeName}*\n`
-    message += `📅 Tanggal: ${dateStr}\n`
-    message += `----------------------------\n`
-    message += `• Omzet: Rp ${todayOmzet.toLocaleString("id-ID")}\n`
-    message += `• Belanja: Rp ${totalExpense.toLocaleString("id-ID")}\n`
-    message += `• *Untung: Rp ${profit.toLocaleString("id-ID")}*\n`
-    message += `----------------------------\n`
-    message += `_Sent via KasStand App_`
+    // Perhitungan Keuangan
+    const cashTotal = transactions.filter(tx => (tx as any).paymentMethod === "CASH").reduce((acc, tx) => acc + tx.total, 0)
+    const qrisTotal = transactions.filter(tx => (tx as any).paymentMethod === "QRIS").reduce((acc, tx) => acc + tx.total, 0)
+    const totalOmzet = cashTotal + qrisTotal
+    const totalExpense = expenses.reduce((acc, ex) => acc + ex.amount, 0)
+    const netTotal = totalOmzet - totalExpense
+
+    // Perhitungan Terjual per Item
+    const itemSummary: Record<string, { qty: number, total: number, price: number }> = {}
+    transactions.forEach(tx => {
+      tx.items.forEach(item => {
+        if (!itemSummary[item.name]) {
+          itemSummary[item.name] = { qty: 0, total: 0, price: item.price }
+        }
+        itemSummary[item.name].qty += item.quantity
+        itemSummary[item.name].total += item.price * item.quantity
+      })
+    })
+
+    let message = `🦋${storeName.toUpperCase()}  ${dateStr}\n\n\n`
+    message += `UANG CASH= RP${cashTotal.toLocaleString("id-ID")}\n`
+    message += `QRIS= ${qrisTotal.toLocaleString("id-ID")}\n`
+    message += `Total =${totalOmzet.toLocaleString("id-ID")}\n\n`
+    message += `Pengeluaran \n`
+    message += `Belanja =\n`
+    if (expenses.length > 0) {
+      expenses.forEach(ex => {
+        message += `${ex.title}(${ex.amount.toLocaleString("id-ID")}) \n`
+      })
+    } else {
+      message += `-\n`
+    }
+    message += `\nTotal penjualan+Pengeluaran\n`
+    message += `=${netTotal.toLocaleString("id-ID")}\n\n`
+    message += `❄️❄️TERJUAL❄️❄️\n`
+    Object.entries(itemSummary).forEach(([name, data]) => {
+      message += ` ❄${name.toUpperCase()}=${data.price.toLocaleString("id-ID")}×${data.qty}porsi=${data.total.toLocaleString("id-ID")}\n`
+    })
+    message += `\nTotal =`
+    const totalsList = Object.values(itemSummary).map(d => d.total.toLocaleString("id-ID"))
+    message += totalsList.join(" +") + "=" + totalOmzet.toLocaleString("id-ID") + "\n\n\n\n"
+    
+    message += `🌲STOK AWAL\n`
+    products.forEach(p => {
+      if (p.category === "Utama" || !p.category) {
+        const terjual = itemSummary[p.name]?.qty || 0
+        message += ` ${p.name.toUpperCase().padEnd(12)} = ${ (p.initialStock || 0) }\n`
+      }
+    })
+    message += ` \n🌲STOK AKHIR \n`
+    products.forEach(p => {
+      if (p.category === "Utama" || !p.category) {
+        message += `${p.name.toUpperCase().padEnd(14)} =${p.stock || 0}\n`
+      }
+    })
+    message += `\n\n 🦋STOK BARANG\n`
+    products.forEach(p => {
+      if (p.category === "Inventaris") {
+        message += `${p.name}=${p.stock || "-"}\n`
+      }
+    })
+    message += `\n\n🦋Yang perlu di Beli\n`
+    const needToBuy = products.filter(p => (p.stock || 0) < 5).map(p => p.name.toLowerCase())
+    if (needToBuy.length > 0) {
+      message += needToBuy.join("\n")
+    } else {
+      message += `Semua stok aman`
+    }
     
     const encodedMessage = encodeURIComponent(message)
     window.open(`https://wa.me/6282285026241?text=${encodedMessage}`, '_blank')

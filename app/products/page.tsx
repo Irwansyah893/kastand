@@ -89,50 +89,48 @@ export default function ProductsPage() {
               Tambah
             </Button>
           </DialogTrigger>
-          <DialogContent className="rounded-3xl max-w-[90vw]">
-            <DialogHeader>
-              <DialogTitle>{editingProduct ? "Edit Produk" : "Tambah Produk Baru"}</DialogTitle>
+          <DialogContent className="rounded-[2.5rem] max-w-[400px] w-[95%] border-0 shadow-2xl p-0 overflow-hidden">
+            <DialogHeader className="p-8 pb-4 bg-slate-50">
+              <DialogTitle className="text-2xl font-bold text-slate-800 tracking-tight">{editingProduct ? "Edit Produk" : "Tambah Produk"}</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 py-4">
+            <div className="space-y-5 p-8 pt-4">
               <div className="space-y-2">
-                <Label>Nama Produk / Barang</Label>
-                <Input placeholder="Contoh: Soto Ayam" value={name} onChange={(e) => setName(e.target.value)} />
+                <Label className="text-slate-500 font-bold text-xs uppercase ml-1">Nama Produk / Barang</Label>
+                <Input className="h-12 rounded-2xl bg-slate-50 border-slate-200" placeholder="Contoh: Soto Ayam" value={name} onChange={(e) => setName(e.target.value)} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Harga Jual</Label>
-                  <Input type="number" placeholder="0" value={price} onChange={(e) => setPrice(e.target.value)} />
+                  <Label className="text-slate-500 font-bold text-xs uppercase ml-1">Harga Jual</Label>
+                  <Input className="h-12 rounded-2xl bg-slate-50 border-slate-200" type="number" placeholder="0" value={price} onChange={(e) => setPrice(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Kategori</Label>
+                  <Label className="text-slate-500 font-bold text-xs uppercase ml-1">Kategori</Label>
                   <Select value={category} onValueChange={(val: any) => setCategory(val)}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-12 rounded-2xl bg-slate-50 border-slate-200">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="rounded-2xl border-0 shadow-xl">
                       <SelectItem value="Utama">Utama (Jualan)</SelectItem>
                       <SelectItem value="Inventaris">Inventaris (Bahan)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 pb-4">
                 <div className="space-y-2">
-                  <Label>Stok Awal</Label>
-                  <Input type="number" placeholder="0" value={initialStock} onChange={(e) => setInitialStock(e.target.value)} />
+                  <Label className="text-slate-500 font-bold text-xs uppercase ml-1">Stok Awal</Label>
+                  <Input className="h-12 rounded-2xl bg-slate-50 border-slate-200" type="number" placeholder="0" value={initialStock} onChange={(e) => setInitialStock(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Stok Akhir/Sekarang</Label>
-                  <Input type="number" placeholder="0" value={stock} onChange={(e) => setStock(e.target.value)} />
+                  <Label className="text-slate-500 font-bold text-xs uppercase ml-1">Stok Sekarang</Label>
+                  <Input className="h-12 rounded-2xl bg-slate-50 border-slate-200" type="number" placeholder="0" value={stock} onChange={(e) => setStock(e.target.value)} />
                 </div>
               </div>
-            </div>
-            <DialogFooter>
-              <Button className="w-full h-12 rounded-xl bg-emerald-600" onClick={handleSave}>
-                <Save className="w-4 h-4 mr-2" />
-                Simpan Produk
+              <Button className="w-full h-14 rounded-2xl bg-emerald-600 font-bold shadow-lg shadow-emerald-500/20 mb-4" onClick={handleSave}>
+                <Save className="w-5 h-5 mr-2" />
+                Simpan Data
               </Button>
-            </DialogFooter>
+            </div>
           </DialogContent>
         </Dialog>
       </header>
