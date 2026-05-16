@@ -19,7 +19,7 @@ export default function ReportsPage() {
   const qrisTotal = transactions.filter(tx => (tx as any).paymentMethod === "QRIS").reduce((acc, tx) => acc + tx.total, 0)
   const totalOmzet = cashTotal + qrisTotal
   const totalExpense = expenses.reduce((acc, ex) => acc + ex.amount, 0)
-  const totalAkhir = totalOmzet - totalExpense
+  const totalPenjualanPlusPengeluaran = totalOmzet - totalExpense
 
   // Perhitungan Terjual per Item
   const itemSummary: Record<string, { qty: number, total: number, price: number }> = {}
@@ -37,53 +37,57 @@ export default function ReportsPage() {
     const storeName = user?.storeName || "TENAN PARADISE"
     const dateStr = new Date().toLocaleDateString("id-ID", { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
     
-    let message = `🦋${storeName.toUpperCase()}  ${dateStr}\n\n`
+    let message = `🦋${storeName.toUpperCase()}  ${dateStr}\n\n\n`
     
-    message += `UANG CASH = RP${cashTotal.toLocaleString("id-ID")}\n`
-    message += `QRIS = ${qrisTotal.toLocaleString("id-ID")}\n`
-    message += `Total = ${totalOmzet.toLocaleString("id-ID")}\n\n`
+    message += `UANG CASH= RP${cashTotal.toLocaleString("id-ID")}\n`
+    message += `QRIS= ${qrisTotal.toLocaleString("id-ID")}\n`
+    message += `Total =${totalOmzet.toLocaleString("id-ID")}\n\n`
     
-    message += `Pengeluaran\n`
+    message += `Pengeluaran \n`
+    message += `Belanja =\n`
     if (expenses.length > 0) {
       expenses.forEach(ex => {
-        message += `${ex.title} (${ex.amount.toLocaleString("id-ID")})\n`
+        message += `${ex.title}(${ex.amount.toLocaleString("id-ID")}) \n`
       })
     } else {
       message += `-\n`
     }
     
     message += `\nTotal penjualan+Pengeluaran\n`
-    message += `=${totalAkhir.toLocaleString("id-ID")}\n\n`
+    message += `=${totalPenjualanPlusPengeluaran.toLocaleString("id-ID")}\n\n`
     
     message += `❄️❄️TERJUAL❄️❄️\n`
     Object.entries(itemSummary).forEach(([name, data]) => {
-      message += `❄️${name.toUpperCase()} = ${data.price.toLocaleString("id-ID")} × ${data.qty}porsi = ${data.total.toLocaleString("id-ID")}\n`
+      message += ` ❄${name.toUpperCase()}=${data.price.toLocaleString("id-ID")}×${data.qty}porsi=${data.total.toLocaleString("id-ID")}\n`
     })
     
-    message += `\nTotal = `
+    message += `\nTotal =`
     const totalsList = Object.values(itemSummary).map(d => d.total.toLocaleString("id-ID"))
-    message += totalsList.join(" + ") + " = " + totalOmzet.toLocaleString("id-ID") + "\n\n"
+    message += totalsList.join(" +") + "=" + totalOmzet.toLocaleString("id-ID") + "\n\n\n\n"
     
     message += `🌲STOK AWAL\n`
-    products.forEach(p => {
+    products.filter(p => p.category === "Utama" || !p.category).forEach(p => {
       const terjual = itemSummary[p.name]?.qty || 0
-      message += `${p.name.toUpperCase()} = ${ (p.stock || 0) + terjual }\n`
+      message += ` ${p.name.toUpperCase().padEnd(12)} = ${ (p.stock || 0) + terjual }\n`
     })
     
-    message += `\n🌲STOK AKHIR\n`
-    products.forEach(p => {
-      message += `${p.name.toUpperCase()} = ${p.stock || 0}\n`
+    message += ` \n🌲STOK AKHIR \n`
+    products.filter(p => p.category === "Utama" || !p.category).forEach(p => {
+      message += `${p.name.toUpperCase().padEnd(14)} =${p.stock || 0}\n`
     })
     
-    message += `\n🦋Yang perlu di Beli\n`
+    message += `\n\n 🦋STOK BARANG\n`
+    products.filter(p => p.category === "Inventaris").forEach(p => {
+      message += `${p.name}=${p.stock || "-"}\n`
+    })
+    
+    message += `\n\n🦋Yang perlu di Beli\n`
     const needToBuy = products.filter(p => (p.stock || 0) < 5).map(p => p.name.toLowerCase())
     if (needToBuy.length > 0) {
       message += needToBuy.join("\n")
     } else {
-      message += `Stok aman`
+      message += `Semua stok aman`
     }
-    
-    message += `\n\n_Dikirim otomatis via KasStand_`
     
     const encodedMessage = encodeURIComponent(message)
     window.open(`https://wa.me/6282285026241?text=${encodedMessage}`, '_blank')
@@ -107,7 +111,7 @@ export default function ReportsPage() {
         <Card className="border-0 shadow-lg bg-emerald-600 text-white rounded-[2rem]">
           <CardContent className="p-8">
             <span className="text-emerald-100 font-medium text-xs uppercase tracking-widest block mb-2">Total Akhir Hari Ini</span>
-            <h3 className="text-4xl font-black italic">Rp {totalAkhir.toLocaleString("id-ID")}</h3>
+            <h3 className="text-4xl font-black italic">Rp {totalPenjualanPlusPengeluaran.toLocaleString("id-ID")}</h3>
           </CardContent>
         </Card>
         <div className="grid grid-cols-2 gap-4">
